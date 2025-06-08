@@ -1,0 +1,109 @@
+version: '3.8'
+
+volumes:
+  prometheus_data: {} # Persistent volume for Prometheus data
+  grafana_data: {}    # Persistent volume for Grafana data
+  loki_data: {}       # Persistent volume for Loki data
+  tempo_data: {}      # Persistent volume for Tempo data
+
+networks:
+  monitoring:
+    driver: bridge # Create a dedicated bridge network for inter-container communication
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+      - '--web.enable-lifecycle' # Enable API endpoint for config reload
+      - '--enable-feature=exemplar-storage' # Enable exemplar storage for trace correlation
+    ports:
+      - "9090:9090" # Map host port 9090 to container port 9090
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:2.9.0 # Use a specific version for stability
+    container_name: loki
+    ports:
+      - "3100:3100" # Loki's HTTP listener
+    command: -config.file=/etc/loki/config.yaml # Use custom config file
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml # Mount Loki config
+      - loki_data:/loki # Persistent storage for Loki data
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.0 # Use a specific version for stability
+    container_name: promtail
+    user: "0:0" # Run as root to ensure access to Docker sockets and logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Docker daemon socket for service discovery
+      - ./promtail/config.yaml:/etc/promtail/config.yaml # Mount Promtail config
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro # Docker container log directory
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - monitoring
+    depends_on:
+      - loki # Ensure Loki is up before Promtail
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.3.1 # Use a specific version for stability
+    container_name: tempo
+    command: ["-config.file=/etc/tempo.yaml"] # Use custom config file
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml # Mount Tempo config
+      - tempo_data:/tmp/tempo # Persistent storage for Tempo data
+    ports:
+      - "3200:3200" # Tempo's HTTP listener for queries
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Set initial admin credentials
+      - GF_USERS_ALLOW_SIGN_UP=false # Disable user sign-up for security
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.92.0 # Use a specific version
+    container_name: otel-collector
+    command:
+      - "--config"
+      - "/otel-collector-config.yaml" # Use custom config file
+    volumes:
+      - ./otel-collector/otel-collector-config.yaml:/otel-collector-config.yaml # Mount OTel Collector config
+    ports:
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+      - "8888:8888" # Prometheus metrics receiver (for internal metrics)
+      - "8889:8889" # Prometheus receiver (for forwarding metrics to Prometheus)
+    networks:
+      - monitoring
+    depends_on:
+      - tempo # Ensure Tempo is up before OTel Collector forwards traces
+      - prometheus # Ensure Prometheus is up before OTel Collector forwards metrics
+    restart: unless-stopped

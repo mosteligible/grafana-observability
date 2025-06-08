@@ -1,0 +1,42 @@
+# config file version
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus_ds
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090 # Internal Docker network URL for Prometheus
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      httpMethod: GET
+  - name: Loki
+    type: loki
+    uid: loki_ds
+    access: proxy
+    orgId: 1
+    url: http://loki:3100 # Internal Docker network URL for Loki
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      httpMethod: GET
+  - name: Tempo
+    type: tempo
+    uid: tempo_ds
+    access: proxy
+    orgId: 1
+    url: http://tempo:3200 # Internal Docker network URL for Tempo
+    basicAuth: false
+    isDefault: true # Set Tempo as default for easier trace exploration
+    version: 1
+    editable: true
+    apiVersion: 1
+    jsonData:
+      httpMethod: GET
+      serviceMap:
+        datasourceUid: prometheus_ds # Link Tempo to Prometheus for service map

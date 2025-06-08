@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s # How frequently to scrape targets
+  evaluation_interval: 15s # How frequently to evaluate rules
+
+scrape_configs:
+  - job_name: 'prometheus' # Scrape Prometheus itself
+    static_configs:
+      - targets: ['localhost:9090'] # Prometheus's own metrics endpoint
+
+  - job_name: 'node_exporter' # Scrape Node Exporter
+    static_configs:
+      - targets: ['node-exporter:9100'] # Internal Docker network URL for Node Exporter
+
+  - job_name: 'otel_collector_metrics' # Scrape OpenTelemetry Collector's internal metrics
+    static_configs:
+      - targets: ['otel-collector:8888', 'otel-collector:8889'] # OTel Collector metrics endpoints

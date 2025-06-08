@@ -1,0 +1,25 @@
+auth_enabled: false # Disable authentication for simplicity in local setup
+
+server:
+  http_listen_port: 3100
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks # Directory for storing log chunks
+      rules_directory: /loki/rules   # Directory for storing rules
+  replication_factor: 1 # No replication for single-node setup
+  ring:
+    kvstore:
+      store: inmemory # In-memory key-value store for ring in single-node setup
+
+schema_config:
+  configs:
+  - from: 2025-05-15
+    store: tsdb
+    object_store: filesystem
+    schema: v13
+    index:
+      prefix: index_
+      period: 24h
