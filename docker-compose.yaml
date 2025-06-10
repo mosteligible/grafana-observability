@@ -16,7 +16,7 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
-      - prometheus_data:/prometheus
+      - ./prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yaml'
       - '--web.enable-lifecycle' # Enable API endpoint for config reload
@@ -35,7 +35,7 @@ services:
     command: -config.file=/etc/loki/config.yaml # Use custom config file
     volumes:
       - ./loki/config.yaml:/etc/loki/config.yaml # Mount Loki config
-      - loki_data:/loki # Persistent storage for Loki data
+      - ./loki_data:/loki # Persistent storage for Loki data
     networks:
       - monitoring
     restart: unless-stopped
@@ -61,7 +61,7 @@ services:
     command: ["-config.file=/etc/tempo.yaml"] # Use custom config file
     volumes:
       - ./tempo/tempo.yaml:/etc/tempo.yaml # Mount Tempo config
-      - tempo_data:/tmp/tempo # Persistent storage for Tempo data
+      - ./tempo_data:/tmp/tempo # Persistent storage for Tempo data
     ports:
       - "3200:3200" # Tempo's HTTP listener for queries
     networks:
@@ -78,7 +78,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin # Set initial admin credentials
       - GF_USERS_ALLOW_SIGN_UP=false # Disable user sign-up for security
     volumes:
-      - grafana_data:/var/lib/grafana
+      - ./grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - monitoring
@@ -89,7 +89,7 @@ services:
     restart: unless-stopped
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.92.0 # Use a specific version
+    image: otel/opentelemetry-collector-contrib:latest # Use a specific version
     container_name: otel-collector
     command:
       - "--config"
