@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
   loki:
-    image: grafana/loki:2.9.0 # Use a specific version for stability
+    image: grafana/loki:latest # Use a specific version for stability
     container_name: loki
     ports:
       - "3100:3100" # Loki's HTTP listener
@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
 
   promtail:
-    image: grafana/promtail:2.9.0 # Use a specific version for stability
+    image: grafana/promtail:latest # Use a specific version for stability
     container_name: promtail
     user: "0:0" # Run as root to ensure access to Docker sockets and logs
     volumes:
@@ -56,7 +56,7 @@ services:
     restart: unless-stopped
 
   tempo:
-    image: grafana/tempo:2.3.1 # Use a specific version for stability
+    image: grafana/tempo:latest # Use a specific version for stability
     container_name: tempo
     command: ["-config.file=/etc/tempo.yaml"] # Use custom config file
     volumes:
