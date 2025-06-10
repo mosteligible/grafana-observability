@@ -78,7 +78,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin # Set initial admin credentials
       - GF_USERS_ALLOW_SIGN_UP=false # Disable user sign-up for security
     volumes:
-      - ./grafana_data:/var/lib/grafana
+      - '$PWD/grafana_data:/var/lib/grafana'
       - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - monitoring
