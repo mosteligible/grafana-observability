@@ -9,7 +9,8 @@ receivers:
             - "https://*"
 processors:
   batch:
-    timeout: 100ms
+    timeout: 1000ms
+
 exporters:
   debug:
     verbosity: detailed
@@ -21,6 +22,7 @@ exporters:
     endpoint: 0.0.0.0:8889 # Expose metrics for Prometheus to scrape
 extensions:
   health_check: {}
+
 service:
   pipelines:
     metrics:
