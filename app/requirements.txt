@@ -7,5 +7,6 @@ uvicorn[standard]
 opentelemetry-instrumentation-fastapi
 opentelemetry-instrumentation-requests
 opentelemetry-instrumentation-logging
+opentelemetry-instrumentation-system-metrics
 requests
 opentelemetry-exporter-otlp
